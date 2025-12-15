@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
+import { ARButton } from "@/lib/ARButton";
 
 export const dynamic = "force-dynamic";
 
@@ -11,63 +12,44 @@ export default function ARPage() {
   useEffect(() => {
     if (!containerRef.current) return;
 
-    let renderer: THREE.WebGLRenderer;
+    const scene = new THREE.Scene();
 
-    const init = async () => {
-      const { ARButton } = await import(
-        "three/examples/jsm/webxr/ARButton.js"
-      );
+    const camera = new THREE.PerspectiveCamera(
+      70,
+      window.innerWidth / window.innerHeight,
+      0.01,
+      20
+    );
 
-      const scene = new THREE.Scene();
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.xr.enabled = true;
 
-      const camera = new THREE.PerspectiveCamera(
-        70,
-        window.innerWidth / window.innerHeight,
-        0.01,
-        20
-      );
+    containerRef.current.appendChild(renderer.domElement);
 
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.xr.enabled = true;
+    const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
+    scene.add(light);
 
-      containerRef.current!.appendChild(renderer.domElement);
+    const cube = new THREE.Mesh(
+      new THREE.BoxGeometry(0.15, 0.15, 0.15),
+      new THREE.MeshStandardMaterial()
+    );
+    cube.position.set(0, 0, -0.7);
+    scene.add(cube);
 
-      const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
-      scene.add(light);
+    document.body.appendChild(
+      ARButton.createButton(renderer)
+    );
 
-      const cube = new THREE.Mesh(
-        new THREE.BoxGeometry(0.15, 0.15, 0.15),
-        new THREE.MeshStandardMaterial()
-      );
-      cube.position.set(0, 0, -0.7);
-      scene.add(cube);
+    renderer.setAnimationLoop(() => {
+      cube.rotation.y += 0.01;
+      renderer.render(scene, camera);
+    });
 
-      document.body.appendChild(
-        ARButton.createButton(renderer)
-      );
-
-      renderer.setAnimationLoop(() => {
-        cube.rotation.y += 0.01;
-        renderer.render(scene, camera);
-      });
-
-      const onResize = () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-      };
-
-      window.addEventListener("resize", onResize);
-
-      return () => {
-        window.removeEventListener("resize", onResize);
-        renderer.setAnimationLoop(null);
-        renderer.dispose();
-      };
+    return () => {
+      renderer.setAnimationLoop(null);
+      renderer.dispose();
     };
-
-    init();
   }, []);
 
   return <div ref={containerRef} className="w-screen h-screen" />;
