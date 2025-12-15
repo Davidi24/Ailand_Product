@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import { ARButton } from "./../../lib/ARButton";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +11,7 @@ export default function ARPage() {
   useEffect(() => {
     if (!containerRef.current) return;
 
+    // --- THREE SETUP ---
     const scene = new THREE.Scene();
 
     const camera = new THREE.PerspectiveCamera(
@@ -21,7 +21,10 @@ export default function ARPage() {
       20
     );
 
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    const renderer = new THREE.WebGLRenderer({
+      alpha: true,
+      antialias: true,
+    });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.xr.enabled = true;
 
@@ -37,9 +40,31 @@ export default function ARPage() {
     cube.position.set(0, 0, -0.7);
     scene.add(cube);
 
-    document.body.appendChild(
-      ARButton.createButton(renderer)
-    );
+    // --- SIMPLE AR BUTTON (INLINE, NO IMPORTS) ---
+    const button = document.createElement("button");
+    button.innerText = "Enter AR";
+    button.style.position = "absolute";
+    button.style.bottom = "20px";
+    button.style.left = "50%";
+    button.style.transform = "translateX(-50%)";
+    button.style.padding = "12px 18px";
+    button.style.fontSize = "16px";
+    button.style.zIndex = "10";
+
+    button.onclick = async () => {
+      if (!navigator.xr) {
+        alert("WebXR not supported");
+        return;
+      }
+
+      const session = await navigator.xr.requestSession("immersive-ar", {
+        requiredFeatures: [],
+      });
+
+      renderer.xr.setSession(session);
+    };
+
+    document.body.appendChild(button);
 
     renderer.setAnimationLoop(() => {
       cube.rotation.y += 0.01;
@@ -49,6 +74,7 @@ export default function ARPage() {
     return () => {
       renderer.setAnimationLoop(null);
       renderer.dispose();
+      button.remove();
     };
   }, []);
 
