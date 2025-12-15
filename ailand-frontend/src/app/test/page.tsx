@@ -58,7 +58,7 @@ export default function ARPage() {
       }
 
       const session = await navigator.xr.requestSession("immersive-ar", {
-        requiredFeatures: [],
+        requiredFeatures: ["local-floor"],
       });
 
       renderer.xr.setSession(session);
