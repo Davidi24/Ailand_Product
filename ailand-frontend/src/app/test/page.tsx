@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import { ARButton } from "@/lib/ARButton";
+import { ARButton } from "./../../lib/ARButton";
 
 export const dynamic = "force-dynamic";
 
